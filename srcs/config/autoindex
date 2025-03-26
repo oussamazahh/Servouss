@@ -1,0 +1,22 @@
+#!/bin/bash
+
+OK="false"  # Flag to validate input
+CONFIG_FILE=/etc/nginx/sites-available/ft_server;
+
+# Check for valid arguments
+if [ "$1" == "on" ]; then
+    OK="true";
+    NEW_VALUE=on;
+elif [ "$1" == "off" ]; then
+    OK="true";
+    NEW_VALUE=off;
+fi
+
+# If valid argument, modify config and restart Nginx
+if [ "$OK" == "true" ]; then
+    sed -i "s/autoindex.*/autoindex $NEW_VALUE;/g" $CONFIG_FILE;
+    echo "Updated $CONFIG_FILE
+    autoindex $NEW_VALUE";
+    service nginx restart;  # Apply changes
+    exit;
+fi
