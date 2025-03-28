@@ -30,11 +30,22 @@ jobs:
         
         # Wait for services to start
         sleep 15
-        
-        # Test HTTP services
-        curl -s http://localhost | grep -q "WordPress" || (echo "WordPress test failed" && exit 1)
-        curl -s http://localhost/phpmyadmin | grep -q "phpMyAdmin" || (echo "phpMyAdmin test failed" && exit 1)
+    
+        # Test WordPress via HTTPS (with insecure flag)
+        echo "Testing WordPress..."
+        curl -ski https://localhost:443/wordpress/ | grep -q "WordPress" || (echo "WordPress HTTPS check failed" && exit 1)
 
+        # Test phpMyAdmin via HTTP (or HTTPS if preferred)
+        echo "Testing phpMyAdmin..."
+        curl -ski https://localhost:443/phpmyadmin/ | grep -q "phpMyAdmin" || (echo "phpMyAdmin check failed" && exit 1)
+
+        # Verify container is still running
+        echo "Checking container status..."
+         docker ps --filter "name=ft_server_container" --format "{{.Status}}" | grep -q "Up" || (echo "Container is not running" && exit 1)
+
+        # Optional: Check container logs for errors
+        echo "Container logs:"
+        docker logs ft_server_container | tail -n 20    
     - name: Cleanup
       if: always()
       run: |
