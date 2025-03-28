@@ -1,0 +1,52 @@
+name: FT_Server CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Docker
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+        sudo systemctl start docker
+        sudo systemctl enable docker
+
+    - name: Make build
+      run: make build
+
+    - name: Make run
+      run: make run
+
+    - name: Test HTTP connection
+      run: |
+        sleep 10  # Wait for container to start
+        curl -sSf http://localhost:80 > /dev/null || (echo "HTTP test failed" && exit 1)
+        curl -sSf https://localhost:443 > /dev/null || (echo "HTTPS test failed" && exit 1)
+
+    - name: Make stop
+      if: always()
+      run: make stop
+
+    - name: Make fclean
+      if: always()
+      run: make fclean
+
+    - name: Verify clean state
+      run: |
+        if [ -n "$(docker ps -aq)" ]; then
+          echo "Containers still running after cleanup"
+          exit 1
+        fi
+        if [ -n "$(docker images -q $(IMAGE_NAME))" ]; then
+          echo "Image still exists after cleanup"
+          exit 1
+        fi
