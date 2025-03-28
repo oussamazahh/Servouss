@@ -26,21 +26,17 @@ jobs:
 
     - name: Run and test container
       run: |
-        # Use different ports to avoid conflicts
-        docker run -d --rm --name ft_server_container \
-          -p 8080:80 \
-          -p 4443:443 \
-          ft_server_image
+        make run
         
         # Wait for services to start
         sleep 15
         
         # Test HTTP services
-        curl -s http://localhost:8080 | grep -q "WordPress" || (echo "WordPress test failed" && exit 1)
-        curl -s http://localhost:8080/phpmyadmin | grep -q "phpMyAdmin" || (echo "phpMyAdmin test failed" && exit 1)
+        curl -s http://localhost:80 | grep -q "WordPress" || (echo "WordPress test failed" && exit 1)
+        curl -s http://localhost:80/phpmyadmin | grep -q "phpMyAdmin" || (echo "phpMyAdmin test failed" && exit 1)
 
     - name: Cleanup
       if: always()
       run: |
-        docker stop ft_server_container || true
-        docker rmi -f ft_server_image || true
+        make stop || true
+        make fclean || true
