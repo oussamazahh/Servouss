@@ -14,10 +14,8 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up Docker
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker.io
-        sudo systemctl start docker
+      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-buildx-action@v2
 
     - name: Build Docker image
       run: |
@@ -26,15 +24,16 @@ jobs:
 
     - name: Run and test container
       run: |
-        # Use different ports to avoid conflicts (8080 instead of 80)
+        # Use different ports to avoid conflicts
         docker run -d --rm --name ft_server_container \
           -p 8080:80 \
           -p 4443:443 \
           ft_server_image
         
-        sleep 10  # Wait for services to start
+        # Wait for services to start
+        sleep 15
         
-        # Test HTTP services (using the mapped ports)
+        # Test HTTP services
         curl -s http://localhost:8080 | grep -q "WordPress" || (echo "WordPress test failed" && exit 1)
         curl -s http://localhost:8080/phpmyadmin | grep -q "phpMyAdmin" || (echo "phpMyAdmin test failed" && exit 1)
 
