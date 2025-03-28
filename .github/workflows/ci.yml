@@ -32,8 +32,8 @@ jobs:
         sleep 15
         
         # Test HTTP services
-        curl -s http://localhost:80 | grep -q "WordPress" || (echo "WordPress test failed" && exit 1)
-        curl -s http://localhost:80/phpmyadmin | grep -q "phpMyAdmin" || (echo "phpMyAdmin test failed" && exit 1)
+        curl -s http://localhost | grep -q "WordPress" || (echo "WordPress test failed" && exit 1)
+        curl -s http://localhost/phpmyadmin | grep -q "phpMyAdmin" || (echo "phpMyAdmin test failed" && exit 1)
 
     - name: Cleanup
       if: always()
