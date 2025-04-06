@@ -19,6 +19,9 @@ Perfect for web development, CMS projects, and database management. 🚀
 - 🔄 **Autoindex Toggle** (On/Off with single command)
 - 🐳 **Dockerized** for easy setup and reproducibility
 
+## 🌐 System Architecture
+![Architecture Diagram](srcs/document/servouss-diagram.png)
+
 ## 📦 Included Services
 
 | Service       | Version    | Port  | Access URL                  |
