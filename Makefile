@@ -1,34 +1,34 @@
 NAME		= ft_server
-IMAGE_NAME	= $(NAME)_image
-CONTAINER_NAME	= $(NAME)_container
-PORT_HTTP	= 80
-PORT_HTTPS	= 443
+COMPOSE_FILE	= srcs/docker-compose.yaml
+PROJECT_NAME	= srcs
 
-.PHONY: all build run stop clean fclean re
+.PHONY: all up down build logs clean fclean re
 
-all: build run
+all: build up
+
+up:
+	@echo "Starting services with docker-compose 🚢🚢🚢"
+	@docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) up -d
+	@echo "Services are running. You can access them on http://localhost"
+
+down:
+	@echo "Stopping services with docker-compose 🚢🚢🚢"
+	@docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) down
 
 build:
-	@echo "Building Docker image ⛏⛏⛏"
-	@docker build -t $(IMAGE_NAME) .
+	@echo "Building services with docker-compose ⛏⛏⛏"
+	@docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) build
 
-run:
-	@echo "Running Docker container 🚢🚢🚢"
-	@docker run -d --rm --name $(CONTAINER_NAME) \
-		-p $(PORT_HTTP):80 \
-		-p $(PORT_HTTPS):443 \
-		$(IMAGE_NAME)
-	@echo "Container is running. You can access it on http://localhost"
+logs:
+	@echo "Displaying logs for services 📜📜📜"
+	@docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) logs
 
-stop:
-	@echo "Stopping Docker container 🚢🚢🚢"
-	@docker stop $(CONTAINER_NAME) || true
-
-clean: stop
-	@echo "Removing Docker container 🕸🕸🕸"
+clean: down
+	@echo "Cleaning up volumes and networks 🕸🕸🕸"
+	@docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) down --volumes --remove-orphans
 
 fclean: clean
-	@echo "Removing Docker image 🕸🕸🕸"
-	@docker rmi -f $(IMAGE_NAME) || true
+	@echo "Removing all images related to the project 🕸🕸🕸"
+	@docker-compose -f $(COMPOSE_FILE) -p $(PROJECT_NAME) rm -f
 
 re: fclean all

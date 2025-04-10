@@ -1,0 +1,70 @@
+services:
+  app:
+    build: ./app
+    image: app
+    container_name: app-container
+    ports:
+      - "443:443"
+      - "80:80"
+    networks:
+      app:
+    volumes:
+      - wordpress-data:/var/www/ft_server/wordpress
+      - phpmyadmin-data:/var/www/ft_server/phpmyadmin
+      - nginx-config:/etc/nginx/sites-available
+      - autoindex-bin:/usr/bin 
+      - nginx-logs:/var/log/nginx
+
+  elasticsearch:
+    image: elasticsearch:7.17.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - app
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    depends_on:
+      - app
+
+  logstash:
+    image: logstash:7.17.3
+    container_name: logstash
+    volumes:
+      - ./services/logstash/config/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - nginx-logs:/var/log/nginx
+    networks:
+      - app
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: kibana:7.17.3
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    networks:
+      - app
+    depends_on:
+      - elasticsearch
+
+networks:
+  app:
+    name: app
+volumes:
+  wordpress-data:
+    name: wordpress-data
+  phpmyadmin-data:
+    name: phpmyadmin-data
+  nginx-config:
+    name: nginx-config
+  autoindex-bin:
+    name: autoindex-bin
+  nginx-logs:
+    name: nginx-logs
+  elasticsearch-data:
+    name: elasticsearch-data
