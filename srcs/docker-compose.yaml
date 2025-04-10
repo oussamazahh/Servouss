@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     build: ./app
@@ -7,7 +9,7 @@ services:
       - "443:443"
       - "80:80"
     networks:
-      app:
+      - app
     volumes:
       - wordpress-data:/var/www/ft_server/wordpress
       - phpmyadmin-data:/var/www/ft_server/phpmyadmin
@@ -21,15 +23,16 @@ services:
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
     networks:
       - app
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    depends_on:
-      - app
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
 
   logstash:
     image: logstash:7.17.3
@@ -40,7 +43,8 @@ services:
     networks:
       - app
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
 
   kibana:
     image: kibana:7.17.3
@@ -49,22 +53,38 @@ services:
       - "5601:5601"
     networks:
       - app
+    volumes:
+      - ./services/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./services/kibana/config/nginx-dashboard.ndjson:/usr/share/kibana/nginx-dashboard.ndjson
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status | grep -q '\"state\":\"green\"'"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  kibana-setup:
+    image: alpine/curl
+    container_name: kibana-setup
+    networks:
+      - app
+    volumes:
+      - ./services/kibana/config/setup-kibana.sh:/setup.sh
+    command: ["sh", "/setup.sh"]
+    depends_on:
+      kibana:
+        condition: service_healthy
 
 networks:
   app:
     name: app
+
 volumes:
   wordpress-data:
-    name: wordpress-data
   phpmyadmin-data:
-    name: phpmyadmin-data
   nginx-config:
-    name: nginx-config
   autoindex-bin:
-    name: autoindex-bin
   nginx-logs:
-    name: nginx-logs
   elasticsearch-data:
-    name: elasticsearch-data
