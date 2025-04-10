@@ -72,6 +72,7 @@ services:
       - app
     volumes:
       - ./services/kibana/config/setup-kibana.sh:/setup.sh
+      - ./services/kibana/config/nginx-dashboard.ndjson:/dashboard.ndjson
     command: ["sh", "/setup.sh"]
     depends_on:
       kibana:
